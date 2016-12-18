@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'pry'
+require 'faker'
+require 'simple_csv'
+
+# CSV generation test
+SimpleCsv.generate('spec/files/output.csv') do
+  headers :first_name, :last_name, :birth_date, :employed_at
+
+  100.times do
+    first_name Faker::Name.first_name
+    last_name Faker::Name.last_name
+    birth_date Faker::Date.between(Date.today << 1000, Date.today << 200)
+    employed_at [Faker::Company.name, nil].sample
+  end
+end
+
+# CSV read test
+SimpleCsv.read('spec/files/output.csv') do
+  headers :first_name, :last_name, :birth_date, :employed_at
+
+  in_groups_of(10) do
+    each_row :with_index do
+      puts [index, first_name, last_name,
+            birth_date, employed_at].compact.join ', '
+    end
+    sleep 1
+  end
+end
