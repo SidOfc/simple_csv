@@ -13,7 +13,7 @@ See the examples given below for more details :)
 
 ## Installation
 
-Add this line to your application's Gemfile:
+Add this line to your application's Gemfile:  
 
 ```ruby
 gem 'simple_csv'
