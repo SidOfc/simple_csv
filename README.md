@@ -3,6 +3,14 @@
 SimpleCsv is a simple gem that allows you to interact with CSV's in a more friendly way.
 See the examples given below for more details :)
 
+## Status
+
+[![Gem Version](https://badge.fury.io/rb/simple_csv.svg)](http://badge.fury.io/rb/simple_csv)
+[![Build Status](https://travis-ci.org/SidOfc/simple_csv.svg?branch=master)](https://travis-ci.org/SidOfc/simple_csv)
+[![Coverage Status](https://coveralls.io/repos/github/SidOfc/simple_csv/badge.svg?branch=master)](https://coveralls.io/github/SidOfc/simple_csv?branch=master)
+
+---
+
 ## Installation
 
 Add this line to your application's Gemfile:
