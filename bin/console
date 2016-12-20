@@ -6,7 +6,7 @@ require 'faker'
 require 'simple_csv'
 
 SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
-  headers :first_name, :last_name, :employed_at, :birth_date #: :date_of_birth
+  headers :first_name, :last_name, :employed_at, :birth_date
 
   each_row do
     p birth_date

@@ -6,9 +6,9 @@ module SimpleCsv
       @csv_path = File.expand_path path
 
       opts[:seperator] ||= detect_delimiter
-      settings merge: opts
+      settings.apply opts
 
-      load_csv_with_auto_headers if settings[:headers] || settings[:has_headers]
+      load_csv_with_auto_headers if settings.for_csv[:headers]
 
       instance_eval(&block)
     end
@@ -25,7 +25,7 @@ module SimpleCsv
     def each_row(*arr_opts, &block)
       @index ||= 0 if arr_opts.include?(:with_index)
 
-      load_csv_with_manual_headers unless @csv
+      load_csv_with_manual_headers unless settings.for_csv[:headers]
 
       @csv.each do |record|
         @record = record
@@ -37,22 +37,20 @@ module SimpleCsv
     private
 
     def load_csv_with_auto_headers
-      if settings[:headers].is_a? Array
-        headers(*settings[:headers])
-      elsif settings[:headers]
-        headers(*find_headers)
-      end
-
-      @csv = @original = CSV.open @csv_path, settings if headers
+      headers(*find_headers)
+      @csv = @original = CSV.open @csv_path, settings.for_csv
     end
 
     def load_csv_with_manual_headers
       SimpleCsv.csv_manually_set_headers! unless @headers_set
-
-      csv_str = CSV.open(@csv_path).to_a.unshift(headers).map(&:to_csv).join
-      @csv = @original = CSV.new csv_str, settings(merge: { headers: true })
-
-      @csv || SimpleCsv.csv_cannot_be_parsed!
+      csv_arr = CSV.open(@csv_path).to_a
+      if (csv_arr.first.size == headers.size)
+        csv_arr.unshift(headers).map(&:to_csv).join
+        settings.apply({ headers: true })
+        @csv = @original = CSV.new csv_str, settings.for_csv
+      else
+        SimpleCsv.csv_not_enough_headers!
+      end
     end
 
     def find_headers
@@ -76,7 +74,6 @@ module SimpleCsv
 
     def method_missing(mtd, *args, &block)
       m = mtd.to_s
-      binding.pry
       return @record[m] if headers.include?(m)
       return @record[@col_map[m]] if @col_map[m]
       super

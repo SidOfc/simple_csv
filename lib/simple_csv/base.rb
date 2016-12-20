@@ -9,13 +9,8 @@ module SimpleCsv
     private
 
     def settings(**opts)
-      s ||= @settings || DEFAULTS.dup
-      s = s.merge opts[:merge] if opts[:merge]
-
-      s[:headers] = s.delete :has_headers if s.key? :has_headers
-      s[:col_sep] = s.delete :seperator if s.key? :seperator
-
-      @settings = s
+      return @settings.merge opts if opts.any? && @settings
+      @settings ||= Settings.new opts
     end
 
     def headers(*cols, **col_map)

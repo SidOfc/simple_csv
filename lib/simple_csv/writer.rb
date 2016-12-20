@@ -3,7 +3,8 @@ module SimpleCsv
     DEFAULTS = { force_quotes: true }.freeze
 
     def initialize(path, **opts, &block)
-      settings merge: DEFAULTS.merge(opts)
+      @force_row_completion = opts.delete :force_row_completion
+      settings.apply DEFAULTS, opts
       CSV.open(File.expand_path(path), 'w', @settings) do |csv|
         @csv = csv
         @current_row = {}
@@ -20,7 +21,10 @@ module SimpleCsv
     def method_missing(mtd, *args, &block)
       SimpleCsv.csv_manually_set_headers! unless @headers_written
       super unless headers.include? mtd.to_s
-      SimpleCsv.row_not_complete!(mtd, args.first) if @current_row[mtd]
+
+      if @force_row_completion && @current_row.key?(mtd)
+        SimpleCsv.row_not_complete!(mtd, args.first)
+      end
 
       @current_row[mtd] = args.first || ''
 

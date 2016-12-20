@@ -1,24 +1,27 @@
 require 'spec_helper'
 
 describe SimpleCsv do
-  it 'Can generate a CSV file' do
-    csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
-    expect(CSV.open(csv_path)).to be_instance_of(CSV)
+
+  describe SimpleCsv::Writer do
+    it 'can generate a CSV file' do
+      csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
+      expect(CSV.open(csv_path)).to be_instance_of(CSV)
+    end
+
+    it 'raises RowNotComplete if a property is called twice in the same loop' do
+      expect do
+        SimpleCsv.generate('spec/files/output.csv') do
+          headers :username, :email, :age
+
+          username 'sidofc'
+          age 'unknown'
+          username 'something@example.com'
+        end
+      end.to raise_error SimpleCsv::RowNotComplete
+    end
   end
 
-  it 'Fails generation when a row is not completed before creating a new one' do
-    expect do
-      SimpleCsv.generate('spec/files/output.csv') do
-        headers :username, :email, :age
-
-        username 'sidofc'
-        age 'unknown'
-        username 'something@example.com'
-      end
-    end.to raise_error /Row not complete!/i
-  end
-
-  it 'Can detect and read CSV files delimited by either ",", ";" or "|"' do
+  it 'read CSV files delimited by ",", ";" or "|"' do
     %w(, ; |).each do |sep|
       res = []
       csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100,
@@ -35,7 +38,8 @@ describe SimpleCsv do
     end
   end
 
-  it 'Can detect headers automatically' do
+  it 'can detect headers automatically' do
+    # if the file has_headers
     res = []
     csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
     SimpleCsv.read(csv_path) do
@@ -46,13 +50,23 @@ describe SimpleCsv do
     expect(res.select { |v| v if v }.count).to be >= (res.count / 100) * 70
   end
 
-  it 'Allows to manually set headers if they are not present or raise' do
+  it 'allows to manually set headers if they are not present or raise' do
+    # headers not set at all
     expect do
       SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
         each_row {}
       end
-    end.to raise_error /CSV does not contain headers/
+    end.to raise_error SimpleCsv::HeadersNotSet
 
+    # column count isn't equal to the amount of headers set
+    expect do
+      SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
+        headers :first_name, :last_name, :birth_date
+        each_row {}
+      end
+    end.to raise_error SimpleCsv::NotEnoughHeaders
+
+    # successfull usecase
     res = []
     SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
       headers :first_name, :last_name, :birth_date, :employed_at
@@ -61,4 +75,6 @@ describe SimpleCsv do
 
     expect(res.select { |v| v if v }.count).to be >= (res.count / 100) * 70
   end
+
+  it 'properly converts'
 end
