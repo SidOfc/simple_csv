@@ -1,9 +1,7 @@
 module SimpleCsv
   class Writer < Base
-    DEFAULTS = { force_quotes: true, force_row_completion: true }.freeze
-
     def initialize(path, **opts, &block)
-      settings.apply DEFAULTS, opts
+      settings.apply({force_row_completion: true}, opts)
       CSV.open(File.expand_path(path), 'w', settings.for_csv) do |csv|
         @csv = csv
         @current_row = {}

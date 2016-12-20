@@ -1,6 +1,7 @@
 module SimpleCsv
   class Settings
     DEFAULTS = { headers: true, col_sep: ',', seperator: ',',
+                 force_quotes: true,
                  converters: [:all, :blank_to_nil, :null_to_nil] }.freeze
     ALIASSED = { seperator: :col_sep, has_headers: :headers }.freeze
     INVERTED_ALIASSES = ALIASSED.to_a.map(&:reverse).to_h

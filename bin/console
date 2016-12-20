@@ -6,8 +6,8 @@ require 'faker'
 require 'simple_csv'
 
 SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
-  headers :first_name, :last_name, :birth_date, :employed_at
-  each_row { res = res.concat(headers.map { |mtd| send(mtd) }) }
+  headers :first_name, :last_name, :birth_date, :employed_at, employed_at: :job
+  each_row { p job }
 end
 
 # Pry.start

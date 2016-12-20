@@ -3,8 +3,11 @@ module SimpleCsv
     attr_reader :index
 
     COMMON_DELIMITERS = %w(, ; |).freeze
-    DEFAULTS = { headers: true, col_sep: ',', seperator: ',',
-                 converters: [:all, :blank_to_nil, :null_to_nil] }.freeze
+
+    def debug_headers
+      p "@headers is now: #{@headers.join ','}"
+      p "@col_map is now #{@col_map}"
+    end
 
     private
 
@@ -14,9 +17,14 @@ module SimpleCsv
     end
 
     def headers(*cols, **col_map)
-      @headers ||= cols.any? && cols.map(&:to_s)
-      @col_map = col_map.any? && stringify_col_map(col_map) || {}
-      @headers_set = @headers.any?
+      @headers ||= []
+      @headers.concat cols.map(&:to_s) if cols.any?
+
+      @col_map ||= {}
+      @col_map.merge! stringify_col_map(col_map) if col_map.any?
+
+      @headers_set ||= @headers.any?
+
       @headers
     end
 
@@ -25,7 +33,7 @@ module SimpleCsv
     end
 
     def respond_to_missing?(mtd, include_private = false)
-      @headers.include?(mtd) || super
+      @headers.include?(mtd) || @col_map.key?(mtd.to_s) || super
     end
   end
 end

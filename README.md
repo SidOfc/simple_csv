@@ -29,17 +29,84 @@ Or install it yourself as:
 
 ## Usage
 
-### Generating a CSV file
+### General
 
-The `SimpleCsv#generate` method takes a path and options to use for generating the file.
-By default, a CSV is generated using comma's (`,`) as seperator and all fields are quoted.
+By default, the settings used will be those of `CSV::DEFAULT_OPTIONS` generally.
+`SimpleCsv` sets the `:headers` property to true by default, this is due to the nature of `SimpleCsv`.
 
-When supplying options they will be merged into the existing defaults rather than overwriting them completely.
+Headers have to be defined either before reading or generating a CSV.
+Since `:headers` is now `true` by default, `SimpleCsv` will allow `CSV` to parse the first line as headers.
+These headers are then converted in method calls to use within an `SimpleCsv::Reader#each_row` loop.
+
+If however, your file lacks headers, you have the ability to set `:has_headers` to false and supply headers manually before calling `SimpleCsv::Reader#each_row`.
+The headers will be picked up and used instead of the first line.
+
+#### SimpleCsv default settings
+
+These are the settings that will be merged with settings passed throogh either `SimpleCsv#generate` or `SimpleCsv#read`
+
+|        setting       |                   value               |
+|----------------------|---------------------------------------|
+|`:col_sep`            | `","`                                |
+|`:row_sep`            | `:auto`                               |
+|`:quote_char`         | `"\"`                               |
+|`:field_size_limit`    | `nil`                                 |
+|`:converters`         | `[:all, :blank_to_nil, :null_to_nil]` |
+|`:unconverted_fields`  | `nil`                                 |
+|`:headers`            | `true`                                |
+|`:return_headers`     | `false`                               |
+|`:header_converters`  | `nil`                                 |
+|`:skip_blanks`        | `false`                               |
+|`:force_quotes`       | `true`                                |
+|`:skip_lines`         | `nil`                                 |
+
+The following settings differ from the `CSV::DEFAULT_OPTIONS`
+
+* `:converters` is set to `[:all, :blank_to_nil, :null_to_nil]`
+* `:headers` is `true` by default
+* `:force_quotes` is `true` by default
+
+This essentially means that when reading a CSV file, headers are required otherwise a `SimpleCsv::HeadersNotSet` exception will be thrown.
+Also, when reading a CSV, all values will be parsed to their respective types, so `"1"` would become `1` as end value.
+
+#### SimpleCsv::Writer additional default settings
+
+Additionally, `SimpleCsv::Writer` has one additional default setting that ensures an entire row is written before being able to write another one.
+This setting enforces you to call each method once before calling one of them again, if this condition is not met a `SimpleCsv::RowNotComplete` exception will be thrown
+
+|         setting        |                   value               |
+|------------------------|---------------------------------------|
+|`:force_row_completion` | `true`                                |
+
+#### Setting aliasses
+
+An _alias_ can be used instead of it's respective _setting_.
+
+|    setting    |     alias     |
+|---------------|---------------|
+| `:col_sep`    | `:seperator`  |
+| `headers`     | `has_headers` |
+
+#### Converters
+
+The above `:converters` option is set to include `:all` converters and additionally, `:blank_to_nil` and `:null_to_nil`
+The code for these two can be summed up in two lines:
 
 ```ruby
-SimpleCsv.generate(path, options = { seperator: ',', force_quotes: true })
+CSV::Converters[:blank_to_nil] = ->(f) { f && f.empty? ? nil : f }
+CSV::Converters[:null_to_nil] = ->(f) { f && f == 'NULL' ? nil : f }
 ```
 
+What they do replace empty values or the string `'NULL'` by nil within a column when it's being parsed.
+For now, these are the default two and they are always used unless the `:converters` option is set to `nil` within `SimpleCsv#generate` or `SimpleCsv#read`
+
+### Generating a CSV file
+
+```ruby
+SimpleCsv.generate path, options = { ... }, &block
+```
+
+The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
 To generate a CSV file we use `SimpleCsv#generate` (using the [faker](https://github.com/stympy/faker) gem to provide fake data)
 
 ```ruby
@@ -63,16 +130,11 @@ end
 
 ### Reading a CSV file
 
-The `SimpleCsv#read` method takes a path and options to use for reading the file.
-By default, the expected seperator is a comma (`,`), `:headers` is set to `true` so that `CSV` parses the file expecting headers.
-The `:converters` option ensures values are converted to a proper type if possible, by default (if this is not set) all values are returned as strings
-
-When supplying options they will be merged into the existing defaults rather than overwriting them completely.
-
 ```ruby
-SimpleCsv.read(path, options = { headers: true, seperator: ',',
-                                 converters: [:all, :blank_to_nil, :null_to_nil] })
+SimpleCsv.read path, options = { ... }, &block
 ```
+
+The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
 
 To read a CSV file we use `SimpleCsv#read`, we will pass it a file path and a block as arguments.
 Within the block we define the headers present in the file, these will be transformed into methods you can call within `SimpleCsv::Reader#each_row` to get that property's current value
@@ -82,33 +144,16 @@ SimpleCsv.read('input.csv') do
   # assumes headers are set, they will be read and callable within each_row
 
   each_row do
-    # print each field defined in headers (that is not nil)
     puts [first_name, last_name, birth_date, employed_at].compact.join ', '
   end
 end
 ```
 
-If we have a large CSV we might want to batch operations (say, if we are inserting this data into a database).
-For this we can use `SimpleCsv::Reader#in_groups_of` and pass the size of the group.
-Within that we call `SimpleCsv::Reader#each_row` as usual
-
-```ruby
-SimpleCsv.read('input.csv') do
-  # assumes headers are set, they will be read and callable within each_row
-
-  in_groups_of(100) do
-    each_row do
-      # print each field defined in headers (that is not nil)
-      puts [first_name, last_name, birth_date, employed_at].compact.join ', '
-    end
-    # execute after every 100 rows
-    sleep 2
-  end
-end
-```
+### Reading a CSV file without headers
 
 Last but not least, if we have a CSV file that does not contain headers we can use the following setup.
-Setting `headers` to `false` means we do not expect
+Setting `:has_headers` to `false` means we do not expect the first line to be headers.
+Therefore we have to explicitly define the headers before looping the CSV.
 
 ```ruby
 SimpleCsv.read('headerless.csv', has_headers: false) do
@@ -122,18 +167,52 @@ SimpleCsv.read('headerless.csv', has_headers: false) do
 end
 ```
 
-Should you want to map existing headers to different names, this is possible by passing a hash at the end with key value pairs.
-To create an alias `date_of_birth` of `birth_date` we would write
+### Batch operations
+
+If we have a large CSV we might want to batch operations (say, if we are inserting this data into a database or through an API).
+For this we can use `SimpleCsv::Reader#in_groups_of` and pass the size of the group.
+Within that we call `SimpleCsv::Reader#each_row` as usual
 
 ```ruby
-headers :first_name, :last_name, :employed_at
+SimpleCsv.read('input.csv') do
+  # assumes headers are set, they will be read and callable within each_row
+
+  in_groups_of(100) do
+    each_row do
+      puts [first_name, last_name, birth_date, employed_at].compact.join ', '
+    end
+    # execute after every 100 rows
+    sleep 2
+  end
+end
+```
+
+### Aliassing existing headers
+
+Should you want to map existing headers to different names, this is possible by passing a hash at the end with key value pairs.
+When generating a CSV file, aliasses are ignored and therefore should not be passed.
+
+When defining columns manually using `headers` for a file without headers, ALL columns must be named before defining aliasses.
+This means that if your CSV exists of 3 columns, 3 headers must be defined before aliassing any of those to something shorter or more concise.
+
+To create an alias `date_of_birth` of `birth_date` *(In a CSV file without headers)* we would write *(notice `:birth_date` is present twice, once as column entry, and once more as key for an alias)*:
+
+```ruby
+headers :first_name, :last_name, :employed_at, :birth_date, birth_date: :date_of_birth
 ```
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bundle` to install dependencies. Then, run `rspec` to run the tests. You can also use the `bin/console` file to play around and debug.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `rake install`.
+
+To release a new version:
+
+* Run CI in dev branch, if tests pass, merge into master
+* Update version number in _lib/simple_csv/version.rb_ according to [symver](http://semver.org/)
+* Update _README.md_ to reflect your changes
+* run `rake release` to push commits, create a tag for the current commit and push the `.gem` file to RubyGems
 
 ## Contributing
 

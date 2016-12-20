@@ -51,6 +51,18 @@ describe SimpleCsv do
       expect(res.select { |v| v if v }.count).to be >= (res.count / 100) * 70
     end
 
+    it 'allows aliassing headers' do
+      # if the file has_headers
+      csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
+      res = []
+      SimpleCsv.read(csv_path) do
+        headers first_name: :aliassed_method
+        each_row { res << aliassed_method }
+      end
+
+      expect(res.compact.any?).to be true
+    end
+
     it 'raises an exception when not enough headers are present' do
       expect do
         SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do

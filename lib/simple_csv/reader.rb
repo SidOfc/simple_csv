@@ -25,7 +25,7 @@ module SimpleCsv
     def each_row(*arr_opts, &block)
       @index ||= 0 if arr_opts.include?(:with_index)
 
-      load_csv_with_manual_headers unless settings.for_csv[:headers]
+      load_csv_with_manual_headers unless @csv
 
       @csv.each do |record|
         @record = record
@@ -38,6 +38,7 @@ module SimpleCsv
 
     def load_csv_with_auto_headers
       headers(*find_headers)
+
       @csv = @original = CSV.open @csv_path, settings.for_csv
     end
 
@@ -67,10 +68,6 @@ module SimpleCsv
 
     def first_line
       @first_line ||= File.open @csv_path, &:readline
-    end
-
-    def respond_to_missing?(mtd, include_private = false)
-      headers.include?(mtd.to_s) || super
     end
 
     def method_missing(mtd, *args, &block)
