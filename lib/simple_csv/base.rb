@@ -2,24 +2,31 @@ module SimpleCsv
   class Base
     attr_reader :index
 
-    COMMON_DELIMITERS = %w(, ; |)
+    COMMON_DELIMITERS = %w(, ; |).freeze
     DEFAULTS = { headers: true, col_sep: ',', seperator: ',',
                  converters: [:all, :blank_to_nil, :null_to_nil] }.freeze
 
     private
 
     def settings(**opts)
-      @settings ||= DEFAULTS.dup
-      @settings = @settings.merge opts[:merge] if opts[:merge]
+      s ||= @settings || DEFAULTS.dup
+      s = s.merge opts[:merge] if opts[:merge]
 
-      @settings[:col_sep] = @settings.delete :seperator if @settings[:seperator]
+      s[:headers] = s.delete :has_headers if s.key? :has_headers
+      s[:col_sep] = s.delete :seperator if s.key? :seperator
 
-      @settings
+      @settings = s
     end
 
-    def headers(*column_names)
-      return @headers if column_names.empty?
-      @headers = column_names.map(&:to_s)
+    def headers(*cols, **col_map)
+      @headers = cols.any? && cols.map(&:to_s) || []
+      @col_map = col_map.any? && stringify_col_map(col_map) || {}
+      @headers_set = @headers.any?
+      @headers
+    end
+
+    def stringify_col_map(col_map)
+      col_map.to_a.map { |m| m.reverse.map(&:to_s) }.to_h
     end
 
     def respond_to_missing?(mtd, include_private = false)

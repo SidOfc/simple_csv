@@ -79,8 +79,7 @@ Within the block we define the headers present in the file, these will be transf
 
 ```ruby
 SimpleCsv.read('input.csv') do
-  # first define the headers in the file manually
-  headers :first_name, :last_name, :birth_date, :employed_at
+  # assumes headers are set, they will be read and callable within each_row
 
   each_row do
     # print each field defined in headers (that is not nil)
@@ -95,8 +94,7 @@ Within that we call `SimpleCsv::Reader#each_row` as usual
 
 ```ruby
 SimpleCsv.read('input.csv') do
-  # first define the headers in the file manually
-  headers :first_name, :last_name, :birth_date, :employed_at
+  # assumes headers are set, they will be read and callable within each_row
 
   in_groups_of(100) do
     each_row do
@@ -107,6 +105,28 @@ SimpleCsv.read('input.csv') do
     sleep 2
   end
 end
+```
+
+Last but not least, if we have a CSV file that does not contain headers we can use the following setup.
+Setting `headers` to `false` means we do not expect
+
+```ruby
+SimpleCsv.read('headerless.csv', has_headers: false) do
+  # first define the headers in the file manually if the file does not have them
+  headers :first_name, :last_name, :birth_date, :employed_at
+
+  each_row do
+    # print each field defined in headers (that is not nil)
+    puts [first_name, last_name, birth_date, employed_at].compact.join ', '
+  end
+end
+```
+
+Should you want to map existing headers to different names, this is possible by passing a hash at the end with key value pairs.
+To create an alias `date_of_birth` of `birth_date` we would write
+
+```ruby
+headers :first_name, :last_name, :employed_at
 ```
 
 ## Development

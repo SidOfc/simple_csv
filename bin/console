@@ -5,27 +5,22 @@ require 'pry'
 require 'faker'
 require 'simple_csv'
 
-# CSV generation test
-SimpleCsv.generate('spec/files/output.csv') do
-  headers :first_name, :last_name, :birth_date, :employed_at
+SimpleCsv.read('spec/files/headerless.csv', has_headers: false) do
+  headers :first_name, :last_name, :employed_at, :birth_date #: :date_of_birth
 
-  100.times do
-    first_name Faker::Name.first_name
-    last_name Faker::Name.last_name
-    birth_date Faker::Date.between(Date.today << 1000, Date.today << 200)
-    employed_at [Faker::Company.name, nil].sample
+  each_row do
+    p birth_date
   end
 end
+
 
 # CSV read test
-SimpleCsv.read('spec/files/output.csv') do
-  headers :first_name, :last_name, :birth_date, :employed_at
-
-  in_groups_of(10) do
-    each_row :with_index do
-      puts [index, first_name, last_name,
-            birth_date, employed_at].compact.join ', '
-    end
-    sleep 1
-  end
-end
+# SimpleCsv.generate('spec/files/output2.csv') do
+#   headers :first_name, :last_name, :employed_at, :date_of_birth
+#
+#   first_name 'test'
+#   last_name 'ting'
+#   first_name 'test2'
+#   date_of_birth '1994-02-10'
+#   employed_at 'citywok'
+# end

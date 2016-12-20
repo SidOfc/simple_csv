@@ -6,7 +6,7 @@ module SimpleCsv
       settings merge: DEFAULTS.merge(opts)
       CSV.open(File.expand_path(path), 'w', @settings) do |csv|
         @csv = csv
-        @current_row = []
+        @current_row = {}
         instance_eval(&block)
       end
     end
@@ -18,17 +18,22 @@ module SimpleCsv
     end
 
     def method_missing(mtd, *args, &block)
-      super unless @headers.include? mtd.to_s
+      SimpleCsv.csv_manually_set_headers! unless @headers_written
+      super unless headers.include? mtd.to_s
+      SimpleCsv.row_not_complete!(mtd, args.first) if @current_row[mtd]
 
-      @current_row << args[0]
-      row_complete = @current_row.count == @headers.count
-      (@csv << @current_row) && @current_row = [] if row_complete
+      @current_row[mtd] = args.first || ''
+
+      return unless @current_row.size == headers.size
+
+      @csv << @current_row.values
+      @current_row = {}
     end
 
-    def headers(*column_names)
-      super
-      @csv << @headers if @csv
-      @headers
+    def headers(*col_names)
+      return @headers if col_names.empty?
+      super(*col_names)
+      (@csv << @headers) && @headers_written = true if @csv
     end
   end
 end

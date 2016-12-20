@@ -8,6 +8,19 @@ require 'simple_csv/writer'
 module SimpleCsv
   @converters_initialized = false
 
+  def self.row_not_complete!(mtd, value)
+    raise "Row not complete! #{mtd} called twice with value #{value}"
+  end
+
+  def self.csv_cannot_be_parsed!
+    raise 'CSV cannot be parsed, please check the format of the file.'
+  end
+
+  def self.csv_manually_set_headers!
+    raise ['CSV does not contain headers',
+           'please add headers in them manually or in the file'].join ', '
+  end
+
   def self.read(path, **options, &block)
     initialize_converters unless converters_initialized
     Reader.new path, options, &block
