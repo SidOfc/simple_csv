@@ -44,9 +44,10 @@ module SimpleCsv
     def load_csv_with_manual_headers
       SimpleCsv.csv_manually_set_headers! unless @headers_set
       csv_arr = CSV.open(@csv_path).to_a
-      if (csv_arr.first.size == headers.size)
-        csv_arr.unshift(headers).map(&:to_csv).join
-        settings.apply({ headers: true })
+
+      if csv_arr.first.size == headers.size
+        csv_str = csv_arr.unshift(headers).map(&:to_csv).join
+        settings.apply(headers: true)
         @csv = @original = CSV.new csv_str, settings.for_csv
       else
         SimpleCsv.csv_not_enough_headers!

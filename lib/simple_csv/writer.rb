@@ -1,11 +1,10 @@
 module SimpleCsv
   class Writer < Base
-    DEFAULTS = { force_quotes: true }.freeze
+    DEFAULTS = { force_quotes: true, force_row_completion: true }.freeze
 
     def initialize(path, **opts, &block)
-      @force_row_completion = opts.delete :force_row_completion
       settings.apply DEFAULTS, opts
-      CSV.open(File.expand_path(path), 'w', @settings) do |csv|
+      CSV.open(File.expand_path(path), 'w', settings.for_csv) do |csv|
         @csv = csv
         @current_row = {}
         instance_eval(&block)
@@ -22,7 +21,7 @@ module SimpleCsv
       SimpleCsv.csv_manually_set_headers! unless @headers_written
       super unless headers.include? mtd.to_s
 
-      if @force_row_completion && @current_row.key?(mtd)
+      if settings.force_row_completion && @current_row.key?(mtd)
         SimpleCsv.row_not_complete!(mtd, args.first)
       end
 

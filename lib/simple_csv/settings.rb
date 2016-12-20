@@ -3,6 +3,7 @@ module SimpleCsv
     DEFAULTS = { headers: true, col_sep: ',', seperator: ',',
                  converters: [:all, :blank_to_nil, :null_to_nil] }.freeze
     ALIASSED = { seperator: :col_sep, has_headers: :headers }.freeze
+    INVERTED_ALIASSES = ALIASSED.to_a.map(&:reverse).to_h
 
     def initialize(**opts)
       @settings = DEFAULTS.dup.merge opts
@@ -10,6 +11,13 @@ module SimpleCsv
 
     def [](setting)
       send setting
+    end
+
+    def []=(m, val)
+      @settings[m] = val
+      return @settings[ALIASSED[m]] = val if ALIASSED.key? m
+      return @settings[INVERTED_ALIASSES[m]] = val if INVERTED_ALIASSES.key? m
+      val
     end
 
     def for_csv
@@ -25,8 +33,7 @@ module SimpleCsv
     end
 
     def apply(*hashes)
-      hashes.each { |opts| @settings.merge! opts }
-      @settings
+      hashes.each { |opts| opts.each { |k, v| self[k] = v } } && @settings
     end
 
     def any?
@@ -34,13 +41,18 @@ module SimpleCsv
     end
 
     def respond_to_missing?(mtd, include_private = false)
-      @settings.key?(mtd) || super
+      accepted_method? mtd || super
     end
 
     def method_missing(mtd, *args, &block)
-      return super unless @settings.key?(mtd) || ALIASSED.key?(mtd)
+      return super unless accepted_method? mtd
       mtd = ALIASSED[mtd] if ALIASSED.key? mtd
+      mtd = INVERTED_ALIASSES[mtd] if INVERTED_ALIASSES.key? mtd
       @settings[mtd]
+    end
+
+    def accepted_method?(mtd)
+      @settings.key?(mtd) || ALIASSED.key?(mtd) || INVERTED_ALIASSES.key?(mtd)
     end
   end
 end

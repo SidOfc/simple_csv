@@ -14,7 +14,7 @@ module SimpleCsv
     end
 
     def headers(*cols, **col_map)
-      @headers = cols.any? && cols.map(&:to_s) || []
+      @headers ||= cols.any? && cols.map(&:to_s)
       @col_map = col_map.any? && stringify_col_map(col_map) || {}
       @headers_set = @headers.any?
       @headers
