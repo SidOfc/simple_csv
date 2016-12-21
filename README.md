@@ -109,6 +109,8 @@ SimpleCsv.generate path, options = { ... }, &block
 The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
 To generate a CSV file we use `SimpleCsv#generate` (using the [faker](https://github.com/stympy/faker) gem to provide fake data)
 
+While writing a row to a CSV, the value of a set property can be accessed by calling that property method again without arguments. (See the "inspect a value" comment in the following example)
+
 ```ruby
 require 'faker'
 
@@ -121,6 +123,8 @@ SimpleCsv.generate('output.csv') do
   100.times do
     # insert data in each field defined in headers to insert a row.
     first_name Faker::Name.first_name
+    # inspect a value
+    p first_name
     last_name Faker::Name.last_name
     birth_date Faker::Date.between(Date.today << 900, Date.today << 200)
     employed_at [Faker::Company.name, nil].sample
