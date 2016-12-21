@@ -43,13 +43,13 @@ The headers will be picked up and used instead of the first line.
 
 #### SimpleCsv default settings
 
-These are the settings that will be merged with settings passed throogh either `SimpleCsv#generate` or `SimpleCsv#read`
+These are the settings that will be merged with settings passed through either `SimpleCsv#generate` or `SimpleCsv#read`
 
 |        setting       |                   value               |
 |----------------------|---------------------------------------|
-|`:col_sep`            | `","`                                |
+|`:col_sep`            | `","`                                 |
 |`:row_sep`            | `:auto`                               |
-|`:quote_char`         | `"\"`                               |
+|`:quote_char`         | `"\"`                                 |
 |`:field_size_limit`    | `nil`                                 |
 |`:converters`         | `[:all, :blank_to_nil, :null_to_nil]` |
 |`:unconverted_fields`  | `nil`                                 |
