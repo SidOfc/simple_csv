@@ -8,6 +8,18 @@ describe SimpleCsv do
       expect(CSV.open(csv_path)).to be_instance_of(CSV)
     end
 
+    it 'converts code-unfriendly headers to callable method aliasses' do
+      res = nil
+      SimpleCsv.generate('spec/files/output.csv') do
+        headers 'user name'
+
+        user_name 'sidofc'
+
+        res = user_name
+      end
+      expect(res).to eq 'sidofc'
+    end
+
     it 'raises RowNotComplete if a property is called twice in the same loop' do
       expect do
         SimpleCsv.generate('spec/files/output.csv') do

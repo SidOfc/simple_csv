@@ -73,7 +73,7 @@ module SimpleCsv
     def method_missing(mtd, *args, &block)
       m = mtd.to_s
       return @record[m] if headers.include?(m)
-      return @record[@col_map[m]] if @col_map[m]
+      return @record[@col_map[m]] if @col_map.key?(m)
       super
     end
   end
