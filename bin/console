@@ -5,19 +5,4 @@ require 'pry'
 require 'faker'
 require 'simple_csv'
 
-# SimpleCsv.generate('spec/files/generated_using_unfriendlyheaders.csv') do
-#   headers 'Property 1', 'Property 2'
-#
-#   10.times do
-#     property_1 Random.rand(1..10)
-#     property_2 Random.rand(10..20)
-#   end
-# end
-res = []
-SimpleCsv.read('spec/files/output.csv') do
-  headers first_name: :aliassed_method
-  each_row { res << aliassed_method }
-end
-p res
-
-# Pry.start
+Pry.start

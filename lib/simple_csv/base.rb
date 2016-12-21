@@ -15,7 +15,7 @@ module SimpleCsv
       @headers ||= []
 
       if cols.any?
-        @headers.concat cols.map(&:to_s)
+        @headers.concat cols.map { |col| col.to_s.strip }
         alias_to_friendly_headers
       end
 

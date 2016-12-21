@@ -70,6 +70,10 @@ module SimpleCsv
       @first_line ||= File.open @csv_path, &:readline
     end
 
+    def respond_to_missing?(mtd, include_private)
+      headers.include?(m) || @col_map.key?(m)
+    end
+
     def method_missing(mtd, *args, &block)
       m = mtd.to_s
       return @record[m] if headers.include?(m)
