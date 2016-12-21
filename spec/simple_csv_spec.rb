@@ -8,6 +8,29 @@ describe SimpleCsv do
       expect(CSV.open(csv_path)).to be_instance_of(CSV)
     end
 
+    it 'converts code-unfriendly headers to callable method aliasses' do
+      expect do
+        SimpleCsv.generate('spec/files/output.csv') do
+          headers 'user name'
+
+          user_name 'sidofc'
+        end
+      end.to_not raise_error
+    end
+
+    it 'headers return values when called without arguments' do
+      expected = 'sidofc'
+      expected_compare = nil
+      SimpleCsv.generate('spec/files/output.csv') do
+        headers 'user name'
+
+        user_name expected
+
+        expected_compare = user_name
+      end
+      expect(expected_compare).to eq expected
+    end
+
     it 'raises RowNotComplete if a property is called twice in the same loop' do
       expect do
         SimpleCsv.generate('spec/files/output.csv') do
@@ -37,6 +60,19 @@ describe SimpleCsv do
         # dealing with. In that case adjust the number 70 to your needs.
         expect(res.select { |v| v if v }.count).to be >= (res.count / 100) * 70
       end
+    end
+
+    it 'headers return values when called without arguments' do
+      expected = 'foo'
+      expected_compare = nil
+      SimpleCsv.generate('spec/files/output.csv') do
+        headers 'First name'
+        first_name expected
+      end
+      SimpleCsv.read('spec/files/output.csv') do
+        each_row { expected_compare = first_name; break }
+      end
+      expect(expected_compare).to eq expected
     end
 
     it 'can detect headers automatically' do

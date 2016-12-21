@@ -4,11 +4,6 @@ module SimpleCsv
 
     COMMON_DELIMITERS = %w(, ; |).freeze
 
-    def debug_headers
-      p "@headers is now: #{@headers.join ','}"
-      p "@col_map is now #{@col_map}"
-    end
-
     private
 
     def settings(**opts)
@@ -18,14 +13,32 @@ module SimpleCsv
 
     def headers(*cols, **col_map)
       @headers ||= []
-      @headers.concat cols.map(&:to_s) if cols.any?
+
+      if cols.any?
+        @headers.concat cols.map { |col| col.to_s.strip }
+        alias_to_friendly_headers
+      end
 
       @col_map ||= {}
       @col_map.merge! stringify_col_map(col_map) if col_map.any?
 
       @headers_set ||= @headers.any?
-
       @headers
+    end
+
+    def alias_to_friendly_headers
+      @col_map ||= {}
+      aliasses = headers.each_with_object({}) do |hdr, h|
+        n = hdr.to_s.strip.gsub(/([a-z])([A-Z])/, '\1_\2').downcase
+               .gsub(/[^\w]|\s/, '_')
+        h[n] = hdr unless @col_map.key? n
+      end
+
+      @col_map.merge! aliasses
+    end
+
+    def method_missing(mtd, *args, &block)
+      super
     end
 
     def stringify_col_map(col_map)

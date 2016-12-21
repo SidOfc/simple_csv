@@ -14,10 +14,10 @@ module Helpers
       headers(*HEADERS)
 
       n.times do
-        first_name Faker::Name.first_name
-        last_name Faker::Name.last_name
-        birth_date Faker::Date.between(Date.today << 1000, Date.today << 200)
-        employed_at [Faker::Company.name, nil].sample
+        first_name 'foo'
+        last_name 'bar'
+        birth_date (Date.today << 1000)
+        employed_at ['bizz', nil].sample
       end
     end
 
