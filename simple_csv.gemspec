@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'CSV DSL'
   spec.description   = 'A simple DSL for reading and generating CSV files'
-  spec.homepage      = 'https://github.com/sidofc/simple_csv'
+  spec.homepage      = 'https://sidofc.github.io/projects/simple-csv/'
   spec.license       = 'MIT'
 
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
