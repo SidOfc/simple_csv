@@ -1,3 +1,3 @@
 # Readme
 
-The documentation has been moved here: [https://sidofc.github.io/gems/simple-csv/readme](https://sidofc.github.io/gems/simple-csv/readme)
+The documentation has been moved here: [https://sidofc.github.io/projects/simple-csv/](https://sidofc.github.io/projects/simple-csv/)
