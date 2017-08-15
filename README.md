@@ -12,10 +12,6 @@ See the examples given below for more details :)
 
 ---
 
-## Table of Contents
-* Table of Contents
-{:toc}
-
 ## Installation
 
 Add this line to your application's Gemfile:
