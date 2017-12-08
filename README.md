@@ -139,7 +139,7 @@ end
 SimpleCsv.read path, options = { ... }, &block
 ```
 
-The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
+The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start reading a CSV file.
 
 To read a CSV file we use `SimpleCsv#read`, we will pass it a file path and a block as arguments.
 Within the block we define the headers present in the file, these will be transformed into methods you can call within `SimpleCsv::Reader#each_row` to get that property's current value
