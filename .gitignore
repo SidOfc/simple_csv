@@ -7,5 +7,7 @@
 /pkg/
 /spec/reports/
 /tmp/
-/**/output.csv
-/**/input.csv
+*output.csv
+*input.csv
+*result.csv
+*transformed.csv
