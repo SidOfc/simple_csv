@@ -4,6 +4,7 @@ require 'simple_csv/version'
 require 'simple_csv/settings'
 require 'simple_csv/base'
 require 'simple_csv/reader'
+require 'simple_csv/transformer'
 require 'simple_csv/writer'
 
 module SimpleCsv
@@ -37,6 +38,11 @@ module SimpleCsv
   def self.generate(path, **options, &block)
     initialize_converters unless converters_initialized?
     Writer.new path, options, &block
+  end
+
+  def self.transform(path, **options, &block)
+    initialize_converters unless converters_initialized?
+    Transformer.new path, options, &block
   end
 
   def self.initialize_converters

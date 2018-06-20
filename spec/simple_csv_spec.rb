@@ -4,13 +4,13 @@ describe SimpleCsv do
 
   describe SimpleCsv::Writer do
     it 'can generate a CSV file' do
-      csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
+      csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100)
       expect(CSV.open(csv_path)).to be_instance_of(CSV)
     end
 
     it 'converts code-unfriendly headers to callable method aliasses' do
       expect do
-        SimpleCsv.generate('spec/files/output.csv') do
+        SimpleCsv.generate('spec/files/result.csv') do
           headers 'user name'
 
           user_name 'sidofc'
@@ -19,7 +19,7 @@ describe SimpleCsv do
     end
 
     it 'headers return values when called without arguments' do
-      SimpleCsv.generate('spec/files/output.csv') do
+      SimpleCsv.generate('spec/files/result.csv') do
         headers 'user name'
 
         user_name 'sidofc'
@@ -45,8 +45,8 @@ describe SimpleCsv do
     it 'read CSV files delimited by ",", ";" or "|"' do
       %w(, ; |).each do |sep|
         res = []
-        csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100,
-                                                                seperator: sep)
+        csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100,
+                                                                 seperator: sep)
         SimpleCsv.read(csv_path) do
           headers(*Helpers::HEADERS)
           each_row { res = res.concat(headers.map { |mtd| send(mtd) }) }
@@ -60,22 +60,20 @@ describe SimpleCsv do
     end
 
     it 'headers return values when called without arguments' do
-      expected = 'foo'
-      expected_compare = nil
-      SimpleCsv.generate('spec/files/output.csv') do
+      SimpleCsv.generate('spec/files/result.csv') do
         headers 'First name'
-        first_name expected
+        first_name 'foo'
       end
-      SimpleCsv.read('spec/files/output.csv') do
-        each_row { expected_compare = first_name; break }
+
+      SimpleCsv.read('spec/files/result.csv') do
+        each_row { expect(first_name).to eq 'foo' }
       end
-      expect(expected_compare).to eq expected
     end
 
     it 'can detect headers automatically' do
       # if the file has_headers
       res = []
-      csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
+      csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100)
       SimpleCsv.read(csv_path) do
         each_row { res = res.concat(headers.map { |mtd| send(mtd) }) }
       end
@@ -86,14 +84,12 @@ describe SimpleCsv do
 
     it 'allows aliassing headers' do
       # if the file has_headers
-      csv_path = Helpers.generate_csv('spec/files/output.csv', rows: 100)
-      res = []
-      SimpleCsv.read(csv_path) do
-        headers first_name: :aliassed_method
-        each_row { res << aliassed_method }
-      end
+      csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100)
 
-      expect(res.compact.any?).to be true
+      SimpleCsv.read(csv_path) do
+        headers :first_name, first_name: :aliassed_method
+        each_row { expect(aliassed_method).to eq first_name }
+      end
     end
 
     it 'raises an exception when not enough headers are present' do
@@ -121,6 +117,24 @@ describe SimpleCsv do
       end
 
       expect(res.select { |v| v if v }.count).to be >= (res.count / 100) * 70
+    end
+  end
+
+  describe SimpleCsv::Transformer do
+    it 'can transform a CSV' do
+      csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100, age: 40, first_name: 'hello')
+
+      SimpleCsv.transform csv_path, output: 'spec/files/transformed.csv' do
+        first_name { |s| s + 'hello' }
+        age { |n| n * 2 }
+      end
+
+      SimpleCsv.read 'spec/files/transformed.csv' do
+        each_row {
+          expect(first_name).to eq "hellohello"
+          expect(age).to eq 80
+        }
+      end
     end
   end
 end
