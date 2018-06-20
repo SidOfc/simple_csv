@@ -4,13 +4,14 @@ module SimpleCsv
 
     def initialize(path, **opts, &block)
       @csv_path = File.expand_path path
+      @caller_self = eval 'self', block.binding
 
       opts[:seperator] ||= detect_delimiter
       settings.apply opts
 
       load_csv_with_auto_headers if settings.for_csv[:headers]
 
-      instance_eval(&block)
+      instance_exec(self, &block)
     end
 
     def in_groups_of(size, &block)
@@ -29,7 +30,7 @@ module SimpleCsv
 
       @csv.each do |record|
         @record = record
-        instance_eval(&block)
+        instance_exec(self, &block)
         @index += 1 if @index
       end
     end
@@ -43,7 +44,7 @@ module SimpleCsv
     end
 
     def load_csv_with_manual_headers
-      SimpleCsv.csv_manually_set_headers! unless @headers_set
+      SimpleCsv.csv_manually_set_headers! unless headers?
       csv_arr = CSV.open(@csv_path).to_a
 
       if csv_arr.first.size == headers.size
@@ -55,30 +56,11 @@ module SimpleCsv
       end
     end
 
-    def find_headers
-      first_line.split(detect_delimiter).map { |h| h.gsub(/^"*|"*$/, '') }
-    end
-
-    def detect_delimiter
-      line = first_line
-      @delimiters = COMMON_DELIMITERS.map { |sep| [sep, line.scan(sep).length] }
-                                     .sort { |a, b| b[1] <=> a[1] }
-      @delimiter ||= @delimiters[0][0]
-    end
-
-    def first_line
-      @first_line ||= File.open @csv_path, &:readline
-    end
-
-    def respond_to_missing?(mtd, include_private)
-      headers.include?(m) || @col_map.key?(m)
-    end
-
     def method_missing(mtd, *args, &block)
       m = mtd.to_s
       return @record[m] if headers.include?(m)
       return @record[@col_map[m]] if @col_map.key?(m)
-      super
+      @caller_self.send mtd, *args, &block
     end
   end
 end

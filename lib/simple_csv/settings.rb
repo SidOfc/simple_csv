@@ -4,7 +4,7 @@ module SimpleCsv
                  force_quotes: true,
                  converters: [:all, :blank_to_nil, :null_to_nil] }.freeze
     ALIASSED = { seperator: :col_sep, has_headers: :headers }.freeze
-    INVERTED_ALIASSES = ALIASSED.to_a.map(&:reverse).to_h
+    INVERTED_ALIASSES = ALIASSED.to_a.map(&:reverse).to_h.freeze
 
     def initialize(**opts)
       @settings = DEFAULTS.dup.merge opts
