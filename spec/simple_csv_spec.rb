@@ -19,16 +19,13 @@ describe SimpleCsv do
     end
 
     it 'headers return values when called without arguments' do
-      expected = 'sidofc'
-      expected_compare = nil
       SimpleCsv.generate('spec/files/output.csv') do
         headers 'user name'
 
-        user_name expected
+        user_name 'sidofc'
 
-        expected_compare = user_name
+        expect(user_name).to eq 'sidofc'
       end
-      expect(expected_compare).to eq expected
     end
 
     it 'raises RowNotComplete if a property is called twice in the same loop' do

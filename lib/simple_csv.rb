@@ -30,12 +30,12 @@ module SimpleCsv
   end
 
   def self.read(path, **options, &block)
-    initialize_converters unless converters_initialized
+    initialize_converters unless converters_initialized?
     Reader.new path, options, &block
   end
 
   def self.generate(path, **options, &block)
-    initialize_converters unless converters_initialized
+    initialize_converters unless converters_initialized?
     Writer.new path, options, &block
   end
 
@@ -45,7 +45,7 @@ module SimpleCsv
     @converters_initialized = true
   end
 
-  def self.converters_initialized
+  def self.converters_initialized?
     @converters_initialized
   end
 end

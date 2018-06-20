@@ -23,7 +23,28 @@ module SimpleCsv
       @col_map.merge! stringify_col_map(col_map) if col_map.any?
 
       @headers_set ||= @headers.any?
+      @headers.uniq!
       @headers
+    end
+
+    def find_headers
+      first_line.split(detect_delimiter).map { |h| h.gsub(/^"*|"*$/, '') }
+    end
+
+    def detect_delimiter
+      line = first_line
+      @delimiters = COMMON_DELIMITERS.map { |sep| [sep, line.scan(sep).length] }
+                                     .sort { |a, b| b[1] <=> a[1] }
+      @delimiter ||= @delimiters[0][0]
+    end
+
+    def first_line
+      @first_line ||= File.open @csv_path, &:readline
+    end
+
+
+    def headers?
+      @headers_set
     end
 
     def alias_to_friendly_headers
