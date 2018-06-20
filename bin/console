@@ -5,4 +5,21 @@ require 'pry'
 require 'faker'
 require 'simple_csv'
 
-Pry.start
+SimpleCsv.generate('sample.csv') do
+  headers :name, :age
+
+  10.times do
+    name Faker::Name.name
+    age  Faker::Number.between(20, 120)
+  end
+end
+
+SimpleCsv.transform('sample.csv', output: 'result.csv') do
+  output_headers :age
+
+  age { |n| n * 2 }
+end
+
+SimpleCsv.read('result.csv') do
+  p headers
+end
