@@ -136,5 +136,19 @@ describe SimpleCsv do
         }
       end
     end
+
+    it 'allows reducing output with SimpleCsv::Transformer#output_headers' do
+      csv_path = Helpers.generate_csv('spec/files/result.csv', rows: 100, first_name: 'hello')
+
+      SimpleCsv.transform csv_path, output: 'spec/files/transformed.csv' do
+        output_headers :first_name
+
+        first_name { |s| s + 'hello' }
+      end
+
+      SimpleCsv.read 'spec/files/transformed.csv' do
+        expect(headers).to eq ['first_name']
+      end
+    end
   end
 end
