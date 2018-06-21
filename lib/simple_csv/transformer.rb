@@ -22,13 +22,14 @@ module SimpleCsv
       return @output_headers if @output_headers.any?
 
       @output_headers = out_headers.map(&:to_s)
+      alias_to_friendly_headers @output_headers
+      @output_headers
     end
 
     private
 
     def apply_transforms(path, **opts)
       received_headers = headers
-      transformations  = @transforms
       timestamp        = Time.new.strftime '%d-%m-%Y-%S%7N'
       output_path      = opts.delete(:output) || "#{path.split('.')[0..-2].join}-#{timestamp}.csv"
       output_headers   = @output_headers.any? ? @output_headers : received_headers
@@ -39,7 +40,7 @@ module SimpleCsv
 
           reader.each_row do
             output_headers.each do |column|
-              transform = transformations[column.to_sym]
+              transform = find_transform column
               result    = transform ? transform.call(reader.send(column))
                                     : reader.send(column)
 
@@ -50,8 +51,14 @@ module SimpleCsv
       end
     end
 
+    def find_transform(column)
+      @transforms[(@col_map.key(column.to_s) || column).to_sym]
+    end
+
     def method_missing(mtd, *args, &block)
-      if headers.include?(mtd.to_s) || @output_headers.include?(mtd.to_s)
+      mstr = mtd.to_s
+
+      if headers.include?(mstr) || @output_headers.include?(mstr) || @col_map.key?(mstr)
         @transforms[mtd] = block || args.first unless @transforms.key? mtd
       else
         @caller_self.send mtd, *args, &block

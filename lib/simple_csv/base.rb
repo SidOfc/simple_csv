@@ -42,14 +42,13 @@ module SimpleCsv
       @first_line ||= File.open @csv_path, &:readline
     end
 
-
     def headers?
       @headers_set
     end
 
-    def alias_to_friendly_headers
+    def alias_to_friendly_headers(names = @headers)
       @col_map ||= {}
-      aliasses = headers.each_with_object({}) do |hdr, h|
+      aliasses = names.each_with_object({}) do |hdr, h|
         n = hdr.to_s.strip.gsub(/([a-z])([A-Z])/, '\1_\2').downcase
                .gsub(/[^\w]|\s/, '_')
         h[n] = hdr unless @col_map.key? n
