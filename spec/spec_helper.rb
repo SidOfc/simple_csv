@@ -9,7 +9,7 @@ module Helpers
   HEADERS = [:first_name, :last_name, :age, :birth_date, :employed_at].freeze
 
   def self.generate_csv(path, **options)
-    n = options.delete(:rows) || 1000
+    n = options.delete(:rows) || 10
     fn = options.delete(:first_name) || 'foo'
     ln = options.delete(:last_name) || 'bar'
     bd = options.delete(:birth_date) || (Date.today << 1000)

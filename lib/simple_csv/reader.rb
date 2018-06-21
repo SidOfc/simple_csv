@@ -17,7 +17,7 @@ module SimpleCsv
     def in_groups_of(size, &block)
       @original.each_slice(size) do |group|
         @csv = group
-        instance_eval(&block)
+        instance_exec(self, &block)
       end
       @index = nil
       @csv = @original

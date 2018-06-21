@@ -2,6 +2,13 @@ require 'spec_helper'
 
 describe SimpleCsv do
   describe SimpleCsv::Writer do
+    it 'passes instance of self to #generate block as first argument' do
+      SimpleCsv.generate('tmp/result.csv') do |writer|
+        headers :name
+        expect(writer).to be_an_instance_of SimpleCsv::Writer
+      end
+    end
+
     it 'generates a CSV file' do
       csv_path = Helpers.generate_csv('tmp/result.csv', rows: 10)
       expect(CSV.open(csv_path)).to be_instance_of(CSV)
@@ -41,11 +48,29 @@ describe SimpleCsv do
   end
 
   describe SimpleCsv::Reader do
+    it 'passes instance of self to #read block as first argument' do
+      csv_path = Helpers.generate_csv 'tmp/result.csv'
+      SimpleCsv.read(csv_path) { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
+    end
+
+    it 'passes instance of self to #each_row block as first argument' do
+      csv_path = Helpers.generate_csv 'tmp/result.csv'
+      SimpleCsv.read(csv_path) do
+        each_row { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
+      end
+    end
+
+    it 'passes instance of self to #in_groups_of block as first argument' do
+      csv_path = Helpers.generate_csv 'tmp/result.csv'
+      SimpleCsv.read(csv_path) do
+        in_groups_of(10) { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
+      end
+    end
+
     %w(, ; |).each do |sep|
       it "reads CSV files delimited by \"#{sep}\"" do
         res = []
-        csv_path = Helpers.generate_csv 'tmp/result.csv',
-                                        rows: 10, seperator: sep
+        csv_path = Helpers.generate_csv 'tmp/result.csv', seperator: sep
         SimpleCsv.read(csv_path) do
           headers(*Helpers::HEADERS)
           each_row { res = res.concat(headers.map { |mtd| send(mtd) }) }
@@ -122,8 +147,16 @@ describe SimpleCsv do
   end
 
   describe SimpleCsv::Transformer do
+    it 'passes instance of self to #transform block as first argument' do
+      csv_path = Helpers.generate_csv 'tmp/tmp.csv'
+
+      SimpleCsv.transform(csv_path) do |transformer|
+        expect(transformer).to be_an_instance_of SimpleCsv::Transformer
+      end
+    end
+
     it 'can transform a CSV' do
-      csv_path = Helpers.generate_csv('tmp/result.csv', rows: 10, age: 40, first_name: 'hello')
+      csv_path = Helpers.generate_csv('tmp/result.csv', age: 40, first_name: 'hello')
 
       SimpleCsv.transform csv_path, output: 'tmp/transformed.csv' do
         first_name { |s| s + 'hello' }
@@ -139,7 +172,7 @@ describe SimpleCsv do
     end
 
     it 'allows reducing output with SimpleCsv::Transformer#output_headers' do
-      csv_path = Helpers.generate_csv('tmp/result.csv', rows: 10, first_name: 'hello')
+      csv_path = Helpers.generate_csv('tmp/result.csv', first_name: 'hello')
 
       SimpleCsv.transform csv_path, output: 'tmp/transformed.csv' do
         output_headers :first_name
