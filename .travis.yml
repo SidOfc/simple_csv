@@ -4,7 +4,11 @@ cache: bundler
 rvm:
   - 2.1.0
   - 2.2.0
-  - 2.2.2
   - 2.3.0
-  - 2.3.3
-before_install: gem install bundler -v 1.13.6
+  - 2.4.0
+  - 2.5.0
+  - 2.5.0
+  - 2.6.0-preview2
+matrix:
+  allow_failures:
+  - rvm: 2.6.0-preview2

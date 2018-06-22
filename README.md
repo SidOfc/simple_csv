@@ -46,20 +46,20 @@ The headers will be picked up and used instead of the first line.
 
 These are the settings that will be merged with settings passed through either `SimpleCsv#generate` or `SimpleCsv#read`
 
-|        setting       |                   value               |
-|----------------------|---------------------------------------|
-|`:col_sep`            | `","`                                 |
-|`:row_sep`            | `:auto`                               |
-|`:quote_char`         | `"\"`                                 |
-|`:field_size_limit`    | `nil`                                 |
-|`:converters`         | `[:all, :blank_to_nil, :null_to_nil]` |
-|`:unconverted_fields`  | `nil`                                 |
-|`:headers`            | `true`                                |
-|`:return_headers`     | `false`                               |
-|`:header_converters`  | `nil`                                 |
-|`:skip_blanks`        | `false`                               |
-|`:force_quotes`       | `true`                                |
-|`:skip_lines`         | `nil`                                 |
+| setting                | value                                   |
+| ---------------------- | --------------------------------------- |
+| `:col_sep`             | `","`                                   |
+| `:row_sep`             | `:auto`                                 |
+| `:quote_char`          | `"\"`                                   |
+| `:field_size_limit`    | `nil`                                   |
+| `:converters`          | `[:all, :blank_to_nil, :null_to_nil]`   |
+| `:unconverted_fields`  | `nil`                                   |
+| `:headers`             | `true`                                  |
+| `:return_headers`      | `false`                                 |
+| `:header_converters`   | `nil`                                   |
+| `:skip_blanks`         | `false`                                 |
+| `:force_quotes`        | `true`                                  |
+| `:skip_lines`          | `nil`                                   |
 
 The following settings differ from the `CSV::DEFAULT_OPTIONS`
 
@@ -110,7 +110,7 @@ SimpleCsv.generate path, options = { ... }, &block
 The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
 To generate a CSV file we use `SimpleCsv#generate` (using the [faker](https://github.com/stympy/faker) gem to provide fake data)
 
-While writing a row to a CSV, the value of a set property can be accessed by calling that property method again without arguments. (See the "inspect a value" comment in the following example)
+While writing a row to a CSV, the value of a set property can be accessed by calling that property method again without arguments (See the "inspect a value" comment in the following example).
 
 ```ruby
 require 'faker'
@@ -130,6 +130,19 @@ SimpleCsv.generate('output.csv') do
     birth_date Faker::Date.between(Date.today << 900, Date.today << 200)
     employed_at [Faker::Company.name, nil].sample
   end
+end
+```
+
+This method passes any unknown method to its caller (`main Object` if none).
+If you need a reference to the instance of the current writer from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.generate ... do |writer|
+  # writer is a reference to the self of this block.
+  # the following two are equivelant (assuming 'name' column exists in the CSV):
+
+  writer.name 'SidOfc'
+  name 'SidOfc'
 end
 ```
 
@@ -154,9 +167,32 @@ SimpleCsv.read('input.csv') do
 end
 ```
 
+This method passes any unknown method to its caller (`main Object` if none).
+If you need a reference to the instance of the current reader from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.read ... do |reader|
+  # reader is a reference to the self of this block.
+  # all the following are equivelant:
+
+  # the 'each_row' and `in_groups_of` methods also get a reference to self.
+  each_row do |reader_too|
+    puts reader_too.name
+    puts reader.name
+    puts name
+  end
+
+  in_groups_of 100 do |other_reader|
+    puts other_reader.name
+    puts reader.name
+    puts name
+  end
+end
+```
+
 ### Reading a CSV file without headers
 
-Last but not least, if we have a CSV file that does not contain headers we can use the following setup.
+If we have a CSV file that does not contain headers we can use the following setup.
 Setting `:has_headers` to `false` means we do not expect the first line to be headers.
 Therefore we have to explicitly define the headers before looping the CSV.
 
@@ -169,6 +205,46 @@ SimpleCsv.read('headerless.csv', has_headers: false) do
     # print each field defined in headers (that is not nil)
     puts [first_name, last_name, birth_date, employed_at].compact.join ', '
   end
+end
+```
+
+### Transforming s CSV file
+
+When you want to alter or reduce the output of a given CSV file, `SimpleCsv#transform` can be used.
+This allows you to apply call a block for each value in a specified column, you can also control the output headers to remove clutter from the input file.
+
+A transformation is defined by calling the header you wish to modify with a block that performs the modification.
+In below example, a CSV with columns `:name`, `:username`, `:age` and `:interests` is assumed. The `:age` of every row
+will be incremented because `age` was defined with the block. **Only** `headers` _and_ `output_headers` are supported within the transform block.
+
+```ruby
+SimpleCsv.transform('people.csv', output: 'people2.csv') do
+  # define specific output headers, other columns will not be added to output csv file
+  output_headers :name, :username, :age, :interests
+
+  # everyone got one year older, increment all ages.
+  age { |n| n + 1 }
+
+  # replace all names with "#{name}_old".
+  name { |s| "#{name}_old" }
+end
+```
+
+The above example will create a file called `people2.csv` that contains the result data. The original file is **not** destroyed.
+There is one additional option for `SimpleCsv#transform` which is the `:output` option.
+When this option not set, the returned file will have the same name as the input CSV followed by a timestamp
+formatted in the following format: `[input_csv]-[%d-%m-%Y-%S&7N].csv` (`[input_csv]` will have `.csv` extension stripped and reapplied).
+See Ruby's [`Time#strftime`](https://ruby-doc.org/core-2.5.0/Time.html) documentation for more information on formatting flags used.
+
+If you need a reference to the instance of the current reader from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.transform ... do |transformer|
+  # transformer is a reference to the self of this block.
+  # all the following are equivelant (assuming "age" property exists):
+
+  transformer.age { |n| n * 2 }
+  age { |n| n * 2 }
 end
 ```
 
@@ -204,6 +280,18 @@ To create an alias `date_of_birth` of `birth_date` *(In a CSV file without heade
 
 ```ruby
 headers :first_name, :last_name, :employed_at, :birth_date, birth_date: :date_of_birth
+```
+
+This allows you to use a method `#date_of_birth` inside any `#each_row` in addition to `#birth_date`:
+
+```ruby
+SimpleCsv.read ... do
+  headers :name, :age, :employed_at, employed_at: :job
+
+  each_row do
+    puts "#{name} is #{age} old and works at #{job}"
+  end
+end
 ```
 
 ## Development
