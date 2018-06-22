@@ -110,11 +110,6 @@ SimpleCsv.generate path, options = { ... }, &block
 The `SimpleCsv#generate` method takes a (required) path, an (optional) hash of options and a (required) block to start building a CSV file.
 To generate a CSV file we use `SimpleCsv#generate` (using the [faker](https://github.com/stympy/faker) gem to provide fake data)
 
-This method passes any unknown method to its caller (`main Object` if none). If you need a reference to the instance of the current writer from within the block, it takes an optional argument:
-
-```ruby
-```
-
 While writing a row to a CSV, the value of a set property can be accessed by calling that property method again without arguments (See the "inspect a value" comment in the following example).
 
 ```ruby
@@ -138,6 +133,19 @@ SimpleCsv.generate('output.csv') do
 end
 ```
 
+This method passes any unknown method to its caller (`main Object` if none).
+If you need a reference to the instance of the current writer from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.generate ... do |writer|
+  # writer is a reference to the self of this block.
+  # the following two are equivelant (assuming 'name' column exists in the CSV):
+
+  writer.name 'SidOfc'
+  name 'SidOfc'
+end
+```
+
 ### Reading a CSV file
 
 ```ruby
@@ -155,6 +163,29 @@ SimpleCsv.read('input.csv') do
 
   each_row do
     puts [first_name, last_name, birth_date, employed_at].compact.join ', '
+  end
+end
+```
+
+This method passes any unknown method to its caller (`main Object` if none).
+If you need a reference to the instance of the current reader from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.read ... do |reader|
+  # reader is a reference to the self of this block.
+  # all the following are equivelant:
+
+  # the 'each_row' and `in_groups_of` methods also get a reference to self.
+  each_row do |reader_too|
+    puts reader_too.name
+    puts reader.name
+    puts name
+  end
+
+  in_groups_of 100 do |other_reader|
+    puts other_reader.name
+    puts reader.name
+    puts name
   end
 end
 ```
@@ -191,7 +222,7 @@ SimpleCsv.transform('people.csv', output: 'people2.csv') do
   # define specific output headers, other columns will not be added to output csv file
   output_headers :name, :username, :age, :interests
 
-  # everyone got one year older, increase all ages.
+  # everyone got one year older, increment all ages.
   age { |n| n + 1 }
 
   # replace all names with "#{name}_old".
@@ -199,11 +230,23 @@ SimpleCsv.transform('people.csv', output: 'people2.csv') do
 end
 ```
 
-The above example will create a file called `people2.csv` that contains the result data. The original file is **not** destroyed by default.
+The above example will create a file called `people2.csv` that contains the result data. The original file is **not** destroyed.
 There is one additional option for `SimpleCsv#transform` which is the `:output` option.
 When this option not set, the returned file will have the same name as the input CSV followed by a timestamp
 formatted in the following format: `[input_csv]-[%d-%m-%Y-%S&7N].csv` (`[input_csv]` will have `.csv` extension stripped and reapplied).
-See Ruby's [`Time#strftime`](https://ruby-doc.org/core-2.5.0/Time.html) documentation for more information.
+See Ruby's [`Time#strftime`](https://ruby-doc.org/core-2.5.0/Time.html) documentation for more information on formatting flags used.
+
+If you need a reference to the instance of the current reader from within the block, it takes an optional argument:
+
+```ruby
+SimpleCsv.transform ... do |transformer|
+  # transformer is a reference to the self of this block.
+  # all the following are equivelant (assuming "age" property exists):
+
+  transformer.age { |n| n * 2 }
+  age { |n| n * 2 }
+end
+```
 
 ### Batch operations
 
@@ -237,6 +280,18 @@ To create an alias `date_of_birth` of `birth_date` *(In a CSV file without heade
 
 ```ruby
 headers :first_name, :last_name, :employed_at, :birth_date, birth_date: :date_of_birth
+```
+
+This allows you to use a method `#date_of_birth` inside any `#each_row` in addition to `#birth_date`:
+
+```ruby
+SimpleCsv.read ... do
+  headers :name, :age, :employed_at, employed_at: :job
+
+  each_row do
+    puts "#{name} is #{age} old and works at #{job}"
+  end
+end
 ```
 
 ## Development
