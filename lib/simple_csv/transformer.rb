@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCsv
   class Transformer < Base
     DEFAULT_FILENAME = 'converted.csv'

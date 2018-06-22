@@ -1,11 +1,31 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe SimpleCsv do
+  describe SimpleCsv::Settings do
+    it 'defines a method for every hash key in constructor' do
+      settings = SimpleCsv::Settings.new hello: 'world', number: 2, bool: true
+
+      expect(settings.hello).to eq 'world'
+      expect(settings.number).to eq 2
+      expect(settings.bool).to eq true
+    end
+  end
+
   describe SimpleCsv::Writer do
     it 'passes instance of self to #generate block as first argument' do
-      SimpleCsv.generate('tmp/result.csv') do |writer|
+      SimpleCsv.generate 'tmp/result.csv' do |writer|
         headers :name
         expect(writer).to be_an_instance_of SimpleCsv::Writer
+      end
+    end
+
+    it 'responds to missing' do
+      SimpleCsv.generate 'tmp/result.csv' do |writer|
+        headers :name
+        expect(writer.respond_to?(:name)).to be true
+        expect(writer.method(:name)).to be_instance_of(Method)
       end
     end
 
@@ -49,21 +69,28 @@ describe SimpleCsv do
 
   describe SimpleCsv::Reader do
     it 'passes instance of self to #read block as first argument' do
-      csv_path = Helpers.generate_csv 'tmp/result.csv'
-      SimpleCsv.read(csv_path) { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
+      SimpleCsv.read Helpers.generate_csv('tmp/result.csv') do |reader|
+        expect(reader).to be_an_instance_of SimpleCsv::Reader
+      end
     end
 
     it 'passes instance of self to #each_row block as first argument' do
-      csv_path = Helpers.generate_csv 'tmp/result.csv'
-      SimpleCsv.read(csv_path) do
+      SimpleCsv.read Helpers.generate_csv('tmp/result.csv') do
         each_row { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
       end
     end
 
     it 'passes instance of self to #in_groups_of block as first argument' do
-      csv_path = Helpers.generate_csv 'tmp/result.csv'
-      SimpleCsv.read(csv_path) do
+      SimpleCsv.read Helpers.generate_csv('tmp/result.csv') do
         in_groups_of(10) { |reader| expect(reader).to be_an_instance_of SimpleCsv::Reader }
+      end
+    end
+
+    it 'responds to missing' do
+      SimpleCsv.read Helpers.generate_csv('tmp/result.csv') do
+        headers :name
+        expect(respond_to?(:name)).to be true
+        expect(method(:name)).to be_instance_of(Method)
       end
     end
 
@@ -156,7 +183,8 @@ describe SimpleCsv do
     end
 
     it 'can transform a CSV' do
-      csv_path = Helpers.generate_csv('tmp/result.csv', age: 40, first_name: 'hello')
+      csv_path = Helpers.generate_csv 'tmp/result.csv',
+                                      age: 40, first_name: 'hello'
 
       SimpleCsv.transform csv_path, output: 'tmp/transformed.csv' do
         first_name { |s| s + 'hello' }
@@ -164,10 +192,10 @@ describe SimpleCsv do
       end
 
       SimpleCsv.read 'tmp/transformed.csv' do
-        each_row {
-          expect(first_name).to eq "hellohello"
+        each_row do
+          expect(first_name).to eq 'hellohello'
           expect(age).to eq 80
-        }
+        end
       end
     end
 

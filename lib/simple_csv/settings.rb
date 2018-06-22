@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCsv
   class Settings
     DEFAULTS = { headers: true, col_sep: ',', seperator: ',',
@@ -8,10 +10,6 @@ module SimpleCsv
 
     def initialize(**opts)
       @settings = DEFAULTS.dup.merge opts
-    end
-
-    def [](setting)
-      send setting
     end
 
     def []=(m, val)
@@ -35,14 +33,6 @@ module SimpleCsv
 
     def apply(*hashes)
       hashes.each { |opts| opts.each { |k, v| self[k] = v } } && @settings
-    end
-
-    def any?
-      @settings && @settings.any?
-    end
-
-    def respond_to_missing?(mtd, include_private = false)
-      accepted_method? mtd || super
     end
 
     def method_missing(mtd, *args, &block)

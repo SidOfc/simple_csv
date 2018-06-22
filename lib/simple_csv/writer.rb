@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCsv
   class Writer < Base
     def initialize(path, **opts, &block)
@@ -44,6 +46,10 @@ module SimpleCsv
       @csv << @current_row.values
       @current_row = {}
       current_val
+    end
+
+    def respond_to_missing?(*)
+      true
     end
   end
 end

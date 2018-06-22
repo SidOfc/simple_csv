@@ -14,6 +14,10 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/SidOfc/simple_csv'
   spec.license       = 'MIT'
 
+  spec.metadata = {
+    'documentation_uri' => 'https://github.com/SidOfc/simple_csv'
+  }
+
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end

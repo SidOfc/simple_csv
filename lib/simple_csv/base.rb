@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCsv
   class Base
     attr_reader :index
@@ -57,16 +59,8 @@ module SimpleCsv
       @col_map.merge! aliasses
     end
 
-    def method_missing(mtd, *args, &block)
-      super
-    end
-
     def stringify_col_map(col_map)
       col_map.to_a.map { |m| m.reverse.map(&:to_s) }.to_h
-    end
-
-    def respond_to_missing?(mtd, include_private = false)
-      @headers.include?(mtd) || @col_map.key?(mtd.to_s) || super
     end
   end
 end

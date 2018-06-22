@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SimpleCsv
   class Reader < Base
     attr_reader :index
@@ -61,6 +63,10 @@ module SimpleCsv
       return @record[m] if headers.include?(m)
       return @record[@col_map[m]] if @col_map.key?(m)
       @caller_self.send mtd, *args, &block
+    end
+
+    def respond_to_missing?(mtd, include_private = false)
+      @headers.include?(mtd) || @col_map.key?(mtd.to_s) || super
     end
   end
 end
