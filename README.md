@@ -211,7 +211,7 @@ end
 ### Transforming s CSV file
 
 When you want to alter or reduce the output of a given CSV file, `SimpleCsv#transform` can be used.
-This allows you to apply call a block for each value in a specified column, you can also control the output headers to remove clutter from the input file.
+This allows you to apply a block on each value in a specified column, you can also control the output headers to remove clutter from the input file.
 
 A transformation is defined by calling the header you wish to modify with a block that performs the modification.
 In below example, a CSV with columns `:name`, `:username`, `:age` and `:interests` is assumed. The `:age` of every row
